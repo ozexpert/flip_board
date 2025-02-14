@@ -37,6 +37,7 @@ class FlipClock extends StatelessWidget {
     required double height,
     AxisDirection flipDirection = AxisDirection.down,
     this.showSeconds = true,
+    this.use24HourFormat = true,
     Curve? flipCurve,
     Color? digitColor,
     Color? backgroundColor,
@@ -51,21 +52,27 @@ class FlipClock extends StatelessWidget {
     double? hingeLength,
     Color? hingeColor,
     EdgeInsets digitSpacing = const EdgeInsets.symmetric(horizontal: 2.0),
-  })  : assert(hingeLength == null || hingeWidth == 0.0 && hingeLength == 0.0 || hingeWidth > 0.0 && hingeLength > 0.0),
-        assert((borderWidth == null && borderColor == null) || (showBorder == null || showBorder == true)),
+  })  : assert(hingeLength == null ||
+            hingeWidth == 0.0 && hingeLength == 0.0 ||
+            hingeWidth > 0.0 && hingeLength > 0.0),
+        assert((borderWidth == null && borderColor == null) ||
+            (showBorder == null || showBorder == true)),
         _displayBuilder = FlipClockBuilder(
           digitSize: digitSize,
           width: width,
           height: height,
           flipDirection: flipDirection,
-          flipCurve:
-              flipCurve ?? (flipDirection == AxisDirection.down ? FlipWidget.bounceFastFlip : FlipWidget.defaultFlip),
+          flipCurve: flipCurve ??
+              (flipDirection == AxisDirection.down
+                  ? FlipWidget.bounceFastFlip
+                  : FlipWidget.defaultFlip),
           digitColor: digitColor,
           backgroundColor: backgroundColor,
           separatorWidth: separatorWidth ?? width / 3.0,
           separatorColor: separatorColor,
           separatorBackgroundColor: separatorBackgroundColor,
-          showBorder: showBorder ?? (borderColor != null || borderWidth != null),
+          showBorder:
+              showBorder ?? (borderColor != null || borderWidth != null),
           borderWidth: borderWidth,
           borderColor: borderColor,
           borderRadius: borderRadius,
@@ -73,7 +80,10 @@ class FlipClock extends StatelessWidget {
           hingeLength: hingeWidth == 0.0
               ? 0.0
               : hingeLength ??
-                  (flipDirection == AxisDirection.down || flipDirection == AxisDirection.up ? width : height),
+                  (flipDirection == AxisDirection.down ||
+                          flipDirection == AxisDirection.up
+                      ? width
+                      : height),
           hingeColor: hingeColor,
           digitSpacing: digitSpacing,
         ),
@@ -85,6 +95,9 @@ class FlipClock extends StatelessWidget {
   final FlipClockBuilder _displayBuilder;
 
   final bool showSeconds;
+
+  /// Whether to use 24-hour format (true) or 12-hour format (false)
+  final bool use24HourFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -110,11 +123,23 @@ class FlipClock extends StatelessWidget {
   }
 
   Widget _buildHourDisplay(Stream<DateTime> timeStream, DateTime initValue) =>
-      _displayBuilder.buildTimePartDisplay(timeStream.map((time) => time.hour), initValue.hour);
+      _displayBuilder.buildTimePartDisplay(
+          timeStream.map((time) => use24HourFormat
+              ? time.hour
+              : (time.hour > 12
+                  ? time.hour - 12
+                  : (time.hour == 0 ? 12 : time.hour))),
+          use24HourFormat
+              ? initValue.hour
+              : (initValue.hour > 12
+                  ? initValue.hour - 12
+                  : (initValue.hour == 0 ? 12 : initValue.hour)));
 
   Widget _buildMinuteDisplay(Stream<DateTime> timeStream, DateTime initValue) =>
-      _displayBuilder.buildTimePartDisplay(timeStream.map((time) => time.minute), initValue.minute);
+      _displayBuilder.buildTimePartDisplay(
+          timeStream.map((time) => time.minute), initValue.minute);
 
   Widget _buildSecondDisplay(Stream<DateTime> timeStream, DateTime initValue) =>
-      _displayBuilder.buildTimePartDisplay(timeStream.map((time) => time.second), initValue.second);
+      _displayBuilder.buildTimePartDisplay(
+          timeStream.map((time) => time.second), initValue.second);
 }
